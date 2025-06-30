@@ -25,7 +25,7 @@ function App() {
 
   // Fungsi ambil data dari backend
   const fetchLocations = () => {
-    fetch("http://200.10.5.44:5000/api/locations")
+    fetch("http://172.20.10.2:5000/api/locations")
       .then(res => res.json())
       .then(data => setLocations(data))
       .catch(err => console.error("❌ Error fetching locations:", err));
@@ -35,7 +35,7 @@ function App() {
   fetchLocations();
 
   // Set interval untuk auto-refresh tiap 10 detik
-  const interval = setInterval(fetchLocations, 10000);
+  const interval = setInterval(fetchLocations, 1000);
 
   // Bersihkan interval saat komponen unmount
   return () => clearInterval(interval);
