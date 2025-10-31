@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Bar } from 'react-chartjs-2'
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   BarElement,
@@ -8,27 +8,40 @@ import {
   LinearScale,
   Tooltip,
   Legend
-} from 'chart.js'
+} from 'chart.js';
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend)
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 function DailyRecap() {
   const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date()
-    return today.toISOString().split('T')[0]
-  })
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
+
+  const [locations, setLocations] = useState([]);
+
+  useEffect(() => {
+    fetch('http://172.20.10.2:5000/api/locations')
+      .then(res => res.json())
+      .then(data => setLocations(data))
+      .catch(err => console.error('❌ Error fetching locations:', err));
+  }, []);
+
+  const ripeCount = locations.filter(loc => loc.status === 'ripe').length;
+  const unripeCount = locations.filter(loc => loc.status === 'unripe').length;
+  const overripeCount = locations.filter(loc => loc.status === 'overripe').length;
 
   const data = {
     labels: ['Ripe', 'Unripe', 'Overripe'],
     datasets: [
       {
         label: 'Jumlah Buah',
-        data: [156, 89, 23],
+        data: [ripeCount, unripeCount, overripeCount],
         backgroundColor: ['#16a34a', '#facc15', '#f97316'],
         borderRadius: 6,
       }
     ]
-  }
+  };
 
   const options = {
     responsive: true,
@@ -42,11 +55,29 @@ function DailyRecap() {
         beginAtZero: true
       }
     }
-  }
+  };
+
+  const handleExport = () => {
+    const csvHeader = 'device_id,lat,lng,status,timestamp\n';
+    const csvRows = locations.map(loc =>
+      `${loc.device_id},${loc.lat},${loc.lng},${loc.status},${loc.timestamp || ''}`
+    );
+    const csvContent = csvHeader + csvRows.join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+
+    const dateStr = new Date().toISOString().split('T')[0];
+    link.setAttribute('download', `PalmCheck_Export_${dateStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      {/* Header */}
       <div className="px-6 mb-6 flex items-center gap-7">
         <div className="w-12 h-12 transform scale-[1.75]">
           <img src="/logo.png" alt="PalmCheck Logo" className="w-full h-full object-contain" />
@@ -57,7 +88,6 @@ function DailyRecap() {
         </div>
       </div>
 
-      {/* Date Picker */}
       <div className="px-6 mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <label className="text-sm font-medium text-gray-700">Pilih Tanggal:</label>
         <input
@@ -68,46 +98,46 @@ function DailyRecap() {
         />
       </div>
 
-      {/* Data Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-6">
         <div className="bg-green-50 rounded-xl shadow p-4">
           <h2 className="text-green-600 font-semibold text-sm mb-2">Ripe Fruits</h2>
-          <p className="text-3xl font-bold text-gray-900">156</p>
-          <p className="text-sm text-green-600 mt-1">+12% dibanding kemarin</p>
+          <p className="text-3xl font-bold text-gray-900">{ripeCount}</p>
+          <p className="text-sm text-green-600 mt-1">Data real-time</p>
         </div>
 
         <div className="bg-yellow-50 rounded-xl shadow p-4">
           <h2 className="text-yellow-600 font-semibold text-sm mb-2">Unripe Fruits</h2>
-          <p className="text-3xl font-bold text-gray-900">89</p>
-          <p className="text-sm text-yellow-600 mt-1">Stabil</p>
+          <p className="text-3xl font-bold text-gray-900">{unripeCount}</p>
+          <p className="text-sm text-yellow-600 mt-1">Data real-time</p>
         </div>
 
         <div className="bg-orange-50 rounded-xl shadow p-4">
           <h2 className="text-orange-600 font-semibold text-sm mb-2">Overripe Fruits</h2>
-          <p className="text-3xl font-bold text-gray-900">23</p>
-          <p className="text-sm text-red-500 mt-1">+5% dibanding kemarin</p>
+          <p className="text-3xl font-bold text-gray-900">{overripeCount}</p>
+          <p className="text-sm text-red-500 mt-1">Data real-time</p>
         </div>
       </div>
 
-      {/* Chart Section */}
       <div className="bg-white rounded-xl shadow p-6 mt-6 mx-6">
         <h3 className="text-lg font-semibold text-gray-700 mb-4">Trend Hari Ini</h3>
         <Bar data={data} options={options} height={200} />
       </div>
 
-      {/* Buttons */}
       <div className="mt-8 px-6 flex flex-col sm:flex-row gap-4">
         <Link to="/">
           <button className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
             ← Kembali ke Dashboard
           </button>
         </Link>
-        <button className="px-5 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-100 transition">
+        <button
+          onClick={handleExport}
+          className="px-5 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-100 transition"
+        >
           ⬇️ Export Data
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default DailyRecap
+export default DailyRecap;

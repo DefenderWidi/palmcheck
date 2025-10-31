@@ -14,31 +14,31 @@ function App() {
     height: '500px'
   };
 
- useEffect(() => {
-  // Ambil posisi user sekali
-  navigator.geolocation.getCurrentPosition(
-    position => {
-      setUserLocation([position.coords.latitude, position.coords.longitude]);
-    },
-    err => console.error(err)
-  );
+  useEffect(() => {
+    // Ambil posisi user sekali
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        setUserLocation([position.coords.latitude, position.coords.longitude]);
+      },
+      err => console.error(err)
+    );
 
-  // Fungsi ambil data dari backend
-  const fetchLocations = () => {
-    fetch("http://172.20.10.2:5000/api/locations")
-      .then(res => res.json())
-      .then(data => setLocations(data))
-      .catch(err => console.error("❌ Error fetching locations:", err));
-  };
+    // Fungsi ambil data dari backend
+    const fetchLocations = () => {
+      fetch("http://172.20.10.3:5000/api/locations")
+        .then(res => res.json())
+        .then(data => setLocations(data))
+        .catch(err => console.error("❌ Error fetching locations:", err));
+    };
 
-  // Panggil pertama kali
-  fetchLocations();
+    // Panggil pertama kali
+    fetchLocations();
 
-  // Set interval untuk auto-refresh tiap 10 detik
-  const interval = setInterval(fetchLocations, 1000);
+    // Set interval untuk auto-refresh (saat ini 1 detik)
+    const interval = setInterval(fetchLocations, 1000);
 
-  // Bersihkan interval saat komponen unmount
-  return () => clearInterval(interval);
+    // Bersihkan interval saat komponen unmount
+    return () => clearInterval(interval);
   }, []);
 
   const ripeCount = locations.filter(loc => loc.status === 'ripe').length;
@@ -93,10 +93,10 @@ function App() {
                   key={index}
                   position={[location.lat, location.lng]}
                   icon={new L.Icon({
-                    iconUrl: location.status === 'ripe' 
-                      ? '/green-marker.png' 
-                      : location.status === 'unripe' 
-                      ? '/yellow-marker.png' 
+                    iconUrl: location.status === 'ripe'
+                      ? '/green-marker.png'
+                      : location.status === 'unripe'
+                      ? '/yellow-marker.png'
                       : '/red-marker.png',
                     iconSize: [32, 32]
                   })}
@@ -106,7 +106,7 @@ function App() {
                 >
                   <Popup>
                     {location.status === 'ripe' ? 'Pohon Matang' :
-                     location.status === 'unripe' ? 'Pohon Belum Matang' : 
+                     location.status === 'unripe' ? 'Pohon Belum Matang' :
                      'Pohon Terlalu Matang'}
                   </Popup>
                 </Marker>
@@ -145,8 +145,8 @@ function App() {
               <span className="h-4 w-4 bg-green-600 rounded-full inline-block" />
               Ripe Fruits Detected
             </div>
-        <div className="text-3xl font-bold text-gray-900">{ripeCount}</div>
-        <div className="text-sm text-green-600 mt-1">Real-time count</div>
+            <div className="text-3xl font-bold text-gray-900">{ripeCount}</div>
+            <div className="text-sm text-green-600 mt-1">Real-time count</div>
           </div>
 
           <div className="bg-yellow-50 rounded-xl shadow p-4 transition duration-300 hover:scale-[1.03]">
@@ -154,8 +154,8 @@ function App() {
               <span className="h-4 w-4 bg-yellow-400 rounded-full inline-block" />
               Unripe Fruits Detected
             </div>
-        <div className="text-3xl font-bold text-gray-900">{unripeCount}</div>
-        <div className="text-sm text-yellow-600 mt-1">Real-time count</div>
+            <div className="text-3xl font-bold text-gray-900">{unripeCount}</div>
+            <div className="text-sm text-yellow-600 mt-1">Real-time count</div>
           </div>
 
           <div className="bg-orange-50 rounded-xl shadow p-4 transition duration-300 hover:scale-[1.03]">
@@ -172,19 +172,24 @@ function App() {
               <span className="h-4 w-4 bg-blue-500 rounded-full inline-block" />
               Detection Accuracy
             </div>
-          <div className="text-3xl font-bold text-gray-900">{accuracy.toFixed(1)}%</div>
-          <div className="text-sm text-blue-500 mt-1">Based on {totalCount} data</div>
+            <div className="text-3xl font-bold text-gray-900">{accuracy.toFixed(1)}%</div>
+            <div className="text-sm text-blue-500 mt-1">Based on {totalCount} data</div>
           </div>
 
+          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-end">
             <Link to="/daily">
               <button className="flex items-center gap-2 px-8 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition">
                 📅 Daily Recap
               </button>
             </Link>
-            <button className="flex items-center gap-2 px-8 py-2 rounded-lg border border-green-600 text-green-600 hover:bg-green-100 transition">
-              ⬇️ Export Data
-            </button>
+
+            {/* ⬇️ Tombol baru ke halaman Yield & ROI */}
+            <Link to="/yield">
+              <button className="flex items-center gap-2 px-8 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition">
+                📈 Yield & ROI
+              </button>
+            </Link>
           </div>
         </div>
       </div>
